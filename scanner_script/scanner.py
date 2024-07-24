@@ -1,110 +1,3 @@
-# import requests
-# from bs4 import BeautifulSoup
-# import time
-#
-# import csv
-#
-# from colorama import Fore, Style, init
-#
-# url = 'https://portal.issn.org/resource/ISSN/'
-#
-# headers = {
-#     'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
-# }
-#
-# site = requests.get(url, headers=headers)
-# soup = BeautifulSoup(site.content, 'html.parser')
-#
-# # Abre o arquivo em modo leitura para ler os issn's.
-# with open('cnpq_issn_s_not_found.csv', 'r', encoding='UTF-8') as r:
-#     reader = csv.reader(r)
-#     issn_s = list(reader)
-#
-#     if not issn_s:
-#
-#         print("Não existem ISSN's no arquivo .csv")
-#
-#     else:
-#         # Abre o arquivo em modo escrita para sobrescrever o conteudo ja existente, se não tiver um arquivo ele cria um novo.
-#         with open('cnpq_verify_portal_issn.csv', 'w', newline='', encoding='UTF-8') as f:
-#
-#             for issn in issn_s:
-#
-#                 url_page = f'https://portal.issn.org/resource/ISSN/{issn}'
-#                 site = requests.get(url_page, headers=headers)
-#                 soup = BeautifulSoup(site.content, 'html.parser')
-#
-#                 # Para verificar se a pagina existe (se o ISSN é valido).
-#                 page_title = soup.find('h3', class_="page-title")
-#
-#                 # Para verificar se o ISSN foi comprimido.
-#                 title = soup.find('h5', class_="item-result-title")
-#
-#                 title = "-"
-#                 issn_text = issn
-#                 lenguage = "-"
-#                 country = "-"
-#                 subject = "-"
-#                 obs = "-"
-#
-#                 # Verifica se o registro existe.
-#                 if page_title.get_text().strip == "The requested numbers do not correspond to valid ISSNs:":
-#                     title = "null"
-#                     issn_text = issn
-#                     lenguage = "null"
-#                     country = "null"
-#                     subject = "null"
-#                     obs = "Resgistro não existe."
-#
-#                 # Verifica se o registro existe e foi comprimido.
-#                 elif title.get_text().strip() == "Suppressed record" or title.get_text().strip() == " record":
-#                     title = "null"
-#                     issn_text = issn
-#                     lenguage = "null"
-#                     country = "null"
-#                     subject = "null"
-#                     obs = "Resgistro comprimido."
-#
-#                 # Verifica se existe e não foi comprimido.
-#                 elif not title.get_text().strip() == "Suppressed record":
-#                     title = title.get_text().strip()
-#                     issn_text = issn
-#
-#                     content_div = soup.find('div', class_="item-result-content-text")
-#                     paragraphs = content_div.find_all('p')
-#
-#                     for p in paragraphs:
-#                         span = p.find_all('span')
-#
-#                         lenguage = "null"
-#                         country = "null"
-#                         subject = "null"
-#
-#                         if span[0].get_text().strip == "Language: ":
-#                             lenguage = p.get_text().strip()
-#
-#                         if span[0].get_text().strip == "Country: ":
-#                             country = p.get_text().strip()
-#
-#                         if span[0].get_text().strip == "Subject: ":
-#                             subject = p.get_text().strip()
-#
-#                     obs = "Resgistro Encontrado."
-#
-#                 line = "Title: " + title + ";" + " " + "ISSN: " + issn_text + ";" + " " + "Language: " + lenguage + ";" + " " + "Language: " + lenguage + ";" + " " + "Subject: " + subject + ";" + "\n"
-#
-#                 f.write(line)
-#
-#                 match obs:
-#                     case "Resgistro Encontrado.":
-#                         print(f'{Fore.LIGHTGREEN_EX}Registro {Fore.LIGHTWHITE_EX}{issn}{Fore.LIGHTGREEN_EX} verificado com status: {Fore.LIGHTBLUE_EX}{obs}\n')
-#
-#                     case "Resgistro comprimido.":
-#                         print(f'{Fore.LIGHTGREEN_EX}Registro {Fore.LIGHTWHITE_EX}{issn}{Fore.LIGHTGREEN_EX} verificado com status: {Fore.LIGHTYELLOW_EX}{obs}\n')
-#
-#                     case "Resgistro não existe.":
-#                         print(f'{Fore.LIGHTGREEN_EX}Registro {Fore.LIGHTWHITE_EX}{issn}{Fore.LIGHTGREEN_EX} verificado com status: {Fore.LIGHTRED_EX}{obs}\n')
-
 import requests
 from bs4 import BeautifulSoup
 import csv
@@ -113,6 +6,9 @@ from colorama import Fore, init
 init(autoreset=True)
 
 url_base = 'https://portal.issn.org/resource/ISSN/'
+
+# Conta qual registro esta sendo verificado.
+c = 0
 
 headers = {
     'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
@@ -129,7 +25,7 @@ with open('cnpq_issn_s_not_found.csv', 'r', encoding='UTF-8') as r:
         # Abre o arquivo em modo escrita para sobrescrever o conteúdo já existente, se não tiver um arquivo ele cria um novo.
         with open('cnpq_verify_portal_issn.csv', 'w', newline='', encoding='UTF-8') as f:
             writer = csv.writer(f)
-            writer.writerow(["Title", "ISSN", "Language", "Country", "Subject", "Obs"])
+            f.write("Title; ISSN; Language; Country; Subject; Observation;\n")
 
             for row in issn_s:
                 issn = row[0]
@@ -138,18 +34,20 @@ with open('cnpq_issn_s_not_found.csv', 'r', encoding='UTF-8') as r:
                 soup = BeautifulSoup(site.content, 'html.parser')
 
                 # Inicializando as variáveis de saída
-                title = "-"
+                title = "null"
                 issn_text = issn
-                language = "-"
-                country = "-"
-                subject = "-"
-                obs = "-"
+                language = "null"
+                country = "null"
+                subject = "null"
+                obs = "null"
 
                 # Para verificar se a página existe (se o ISSN é válido).
                 page_title = soup.find('h3', class_="page-title")
 
                 # Para verificar se o ISSN foi comprimido.
                 item_result_title = soup.find('h5', class_="item-result-title")
+                # Lista dos possiveis motivos dos registros não estarem disponiveis.
+                namelist = ["Suppressed record", "record", "Provisional record", "Cancelled record", "Unreported record", "Awaiting validation record"]
 
                 # Verifica se o registro existe.
                 if page_title and page_title.get_text().strip() == "The requested numbers do not correspond to valid ISSNs:":
@@ -157,44 +55,47 @@ with open('cnpq_issn_s_not_found.csv', 'r', encoding='UTF-8') as r:
                     language = "null"
                     country = "null"
                     subject = "null"
-                    obs = "Registro não existe."
+                    obs = "Registro inexistente"
 
                 # Verifica se o registro existe e foi comprimido.
-                elif item_result_title and item_result_title.get_text().strip() == "Suppressed record":
+                elif item_result_title and item_result_title.get_text().strip() in namelist:
                     title = "null"
                     language = "null"
                     country = "null"
                     subject = "null"
-                    obs = "Registro comprimido."
+                    obs = "Registro encontrado mas sem info"
 
                 # Verifica se existe e não foi comprimido.
-                elif item_result_title and item_result_title.get_text().strip() != "Suppressed record":
-                    title = item_result_title.get_text().strip()
+                elif item_result_title and not item_result_title.get_text().strip() in namelist:
+                    titlen = item_result_title.get_text().strip()
+                    title = titlen.replace('Key-title    ', '')
 
-                    content_div = soup.find('div', class_="item-result-content-text")
-                    if content_div:
-                        paragraphs = content_div.find_all('p')
-                        for p in paragraphs:
-                            spans = p.find_all('span')
-                            if spans:
-                                if spans[0].get_text().strip() == "Language: ":
+                    content_divs = soup.find_all('div', class_="item-result-content-text")
+                    if content_divs:
+                        paragraphs = content_divs[1].find_all('p')
+                        if paragraphs:
+                            for p in paragraphs:
+                                if "Language: " in p.get_text().strip():
                                     language = p.get_text().strip().replace("Language: ", "")
-                                if spans[0].get_text().strip() == "Country: ":
+                                if "Country: " in p.get_text().strip():
                                     country = p.get_text().strip().replace("Country: ", "")
-                                if spans[0].get_text().strip() == "Subject: ":
+                                if "Subject: " in p.get_text().strip():
                                     subject = p.get_text().strip().replace("Subject: ", "")
-                    obs = "Registro Encontrado."
+
+                    obs = "Registro Encontrado"
 
                 # Escreve a linha no arquivo CSV
-                writer.writerow([title, issn_text, language, country, subject, obs])
+                line = f"'{title}'; '{issn}; '{language}'; '{country}'; '{subject}'; '{obs}';\n"
+                f.write(line)
+                c += 1
 
                 match obs:
-                    case "Registro Encontrado.":
+                    case "Registro Encontrado":
                         print(
-                            f'{Fore.LIGHTGREEN_EX}Registro {Fore.LIGHTWHITE_EX}{issn}{Fore.LIGHTGREEN_EX} verificado com status: {Fore.LIGHTBLUE_EX}{obs}')
-                    case "Registro comprimido.":
+                            f'{c}{Fore.LIGHTGREEN_EX} Registro {Fore.LIGHTWHITE_EX}{issn}{Fore.LIGHTGREEN_EX} verificado com status: {Fore.LIGHTBLUE_EX}{obs}')
+                    case "Registro encontrado mas sem info":
                         print(
-                            f'{Fore.LIGHTGREEN_EX}Registro {Fore.LIGHTWHITE_EX}{issn}{Fore.LIGHTGREEN_EX} verificado com status: {Fore.LIGHTYELLOW_EX}{obs}')
-                    case "Registro não existe.":
+                            f'{c}{Fore.LIGHTGREEN_EX} Registro {Fore.LIGHTWHITE_EX}{issn}{Fore.LIGHTGREEN_EX} verificado com status: {Fore.LIGHTYELLOW_EX}{obs}')
+                    case "Registro inexistente":
                         print(
-                            f'{Fore.LIGHTGREEN_EX}Registro {Fore.LIGHTWHITE_EX}{issn}{Fore.LIGHTGREEN_EX} verificado com status: {Fore.LIGHTRED_EX}{obs}')
+                            f'{c}{Fore.LIGHTGREEN_EX} Registro {Fore.LIGHTWHITE_EX}{issn}{Fore.LIGHTGREEN_EX} verificado com status: {Fore.LIGHTRED_EX}{obs}')
