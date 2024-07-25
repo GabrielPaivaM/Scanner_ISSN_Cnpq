@@ -67,9 +67,9 @@ with open('cnpq_issn_s_not_found.csv', 'r', encoding='UTF-8') as r:
 
                 # Verifica se existe e não foi comprimido.
                 elif item_result_title and not item_result_title.get_text().strip() in namelist:
-                    titlen = item_result_title.get_text().strip()
-                    title = titlen.replace('Key-title    ', '')
-                    # titlem = title.replace(';', '')
+                    titlen = item_result_title.get_text().strip() + ':;'
+                    titlem = titlen.replace('Key-title    ', '')
+                    title = titlem.replace(';', '')
 
                     content_divs = soup.find_all('div', class_="item-result-content-text")
                     if content_divs:
