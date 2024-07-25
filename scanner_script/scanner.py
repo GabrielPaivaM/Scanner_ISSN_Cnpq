@@ -69,6 +69,7 @@ with open('cnpq_issn_s_not_found.csv', 'r', encoding='UTF-8') as r:
                 elif item_result_title and not item_result_title.get_text().strip() in namelist:
                     titlen = item_result_title.get_text().strip()
                     title = titlen.replace('Key-title    ', '')
+                    # titlem = title.replace(';', '')
 
                     content_divs = soup.find_all('div', class_="item-result-content-text")
                     if content_divs:
@@ -85,7 +86,7 @@ with open('cnpq_issn_s_not_found.csv', 'r', encoding='UTF-8') as r:
                     obs = "Registro Encontrado"
 
                 # Escreve a linha no arquivo CSV
-                line = f"'{title}'; '{issn}; '{language}'; '{country}'; '{subject}'; '{obs}';\n"
+                line = f"'{title}'; '{issn}'; '{language}'; '{country}'; '{subject}'; '{obs}';\n"
                 f.write(line)
                 c += 1
 
