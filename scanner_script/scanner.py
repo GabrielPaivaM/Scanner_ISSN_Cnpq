@@ -7,18 +7,9 @@ from colorama import Fore, init
 
 init(autoreset=True)
 
-if len(sys.argv) < 3:
-    print("Digite dqual linha deve começar a ler e em qual deve terminar")
-    sys.exit(1)
-
-# Linhas de inicio e fim
-start_line = int(sys.argv[1])
-end_line = int(sys.argv[2])
-
 url_base = 'https://portal.issn.org/resource/ISSN/'
 
 # Conta qual registro esta sendo verificado.
-c = start_line - 1
 
 headers = {
     'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
@@ -29,12 +20,28 @@ with open('cnpq_issn_s_not_found.csv', 'r', encoding='UTF-8') as r:
     reader = csv.reader(r)
     issn_s = list(reader)
 
+    if len(sys.argv) == 2 or len(sys.argv) >= 4:
+        print("Digite dqual linha deve começar a ler e em qual deve terminar")
+        sys.exit(1)
+
+    start_line = 0
+    end_line = 0
+
+    if len(sys.argv) == 1:
+        start_line = 1
+        end_line = len(issn_s)
+
+    if len(sys.argv) == 3:
+        start_line = int(sys.argv[1])
+        end_line = int(sys.argv[2])
+
+    c = start_line - 1
+
     if not issn_s:
         print("Não existem ISSNs no arquivo .csv")
     else:
         # Abre o arquivo em modo escrita para sobrescrever o conteúdo já existente, se não tiver um arquivo ele cria um novo.
-        with open('cnpq_verify_portal_issn.csv', 'w', newline='', encoding='UTF-8') as f:
-            writer = csv.writer(f)
+        with open('cnpq_verified_portal_issn.csv', 'w', newline='', encoding='UTF-8') as f:
             f.write("Title§ ISSN§ Language§ Country§ Subject§ Observation§\n")
 
             for i in range(start_line - 1, end_line):
