@@ -70,21 +70,27 @@ with open('cnpq_issn_s_not_found.csv', 'r', encoding='UTF-8') as r:
                     titlen = item_result_title.get_text().strip()
 
                     # Tira o início inutilizável do titulo.
-                    titlem = titlen.replace('Key-title    ', '')
-                    titleo = titlem.replace(';', '')
-                    title = titleo.replace("'", "")
+                    title = titlen.replace('Key-title    ', '')
+                    subjectn = ''
 
                     content_divs = soup.find_all('div', class_="item-result-content-text")
                     if content_divs:
                         paragraphs = content_divs[1].find_all('p')
                         if paragraphs:
                             for p in paragraphs:
-                                if "Language: " in p.get_text().strip():
-                                    language = p.get_text().strip().replace("Language: ", "")
-                                if "Country: " in p.get_text().strip():
-                                    country = p.get_text().strip().replace("Country: ", "")
-                                if "Subject: " in p.get_text().strip():
-                                    subject = p.get_text().strip().replace("Subject: ", "")
+                                span = p.find('span')
+                                if span:
+                                    if "Language:" == span.get_text().strip():
+                                        language = p.get_text().strip().replace("Language: ", "")
+                                    if "Country:" == span.get_text().strip():
+                                        country = p.get_text().strip().replace("Country: ", "")
+                                    if "Subject:" == span.get_text().strip():
+                                        # Formata
+                                        subjectlist = list()
+                                        subjectlist.append(f'{p.get_text().strip().replace("Subject: ", "")},')
+                                        for str in subjectlist:
+                                            subjectn = subjectn + f'{str} '
+                                        subject = subjectn[:-2]
 
                     obs = "Registro Encontrado"
 
