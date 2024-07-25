@@ -1,3 +1,5 @@
+import sys
+
 import requests
 from bs4 import BeautifulSoup
 import csv
@@ -5,10 +7,18 @@ from colorama import Fore, init
 
 init(autoreset=True)
 
+if len(sys.argv) < 3:
+    print("Digite dqual linha deve começar a ler e em qual deve terminar")
+    sys.exit(1)
+
+# Linhas de inicio e fim
+start_line = int(sys.argv[1])
+end_line = int(sys.argv[2])
+
 url_base = 'https://portal.issn.org/resource/ISSN/'
 
 # Conta qual registro esta sendo verificado.
-c = 0
+c = start_line - 1
 
 headers = {
     'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
@@ -25,10 +35,14 @@ with open('cnpq_issn_s_not_found.csv', 'r', encoding='UTF-8') as r:
         # Abre o arquivo em modo escrita para sobrescrever o conteúdo já existente, se não tiver um arquivo ele cria um novo.
         with open('cnpq_verify_portal_issn.csv', 'w', newline='', encoding='UTF-8') as f:
             writer = csv.writer(f)
-            f.write("Title; ISSN; Language; Country; Subject; Observation;\n")
+            f.write("Title§ ISSN§ Language§ Country§ Subject§ Observation§\n")
 
-            for row in issn_s:
-                issn = row[0]
+            for i in range(start_line - 1, end_line):
+                if i >= len(issn_s):
+                    print("Linha fora do intervalo.")
+                    break
+
+                issn = issn_s[i][0]
                 url_page = f'{url_base}{issn}'
                 site = requests.get(url_page, headers=headers)
                 soup = BeautifulSoup(site.content, 'html.parser')
@@ -95,7 +109,7 @@ with open('cnpq_issn_s_not_found.csv', 'r', encoding='UTF-8') as r:
                     obs = "Registro Encontrado"
 
                 # Escreve a linha no arquivo CSV
-                line = f"'{title}'; '{issn}'; '{language}'; '{country}'; '{subject}'; '{obs}';\n"
+                line = f"{title}§ {issn}§ {language}§ {country}§ {subject}§ {obs}§\n"
                 f.write(line)
                 c += 1
 
